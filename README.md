@@ -1,6 +1,6 @@
 ### `README.md`
 
-```markdown
+
 # 🌲 cartotree
 
 > AI-friendly codebase mapping CLI — annotated directory trees that save tokens, not just space.
