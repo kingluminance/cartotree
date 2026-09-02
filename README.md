@@ -200,6 +200,5 @@ Supports `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`.
 ## License
 
 MIT
-```
 
 ---
