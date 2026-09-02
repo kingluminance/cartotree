@@ -1,15 +1,28 @@
 {
   "name": "cartotree",
   "version": "0.1.0",
-  "description": "AI-friendly codebase tree with folder annotations",
+  "description": "AI-friendly codebase mapping CLI — annotated directory trees that save tokens",
   "main": "src/tree.js",
   "bin": {
-    "cartotree": "./bin/cartotree.js"
+    "cartotree": "bin/cartotree.js"
   },
-  "scripts": {
-    "start": "node bin/cartotree.js",
-    "dev": "node bin/cartotree.js"
+  "keywords": [
+    "cli",
+    "ai",
+    "developer-tools",
+    "tree",
+    "claude",
+    "cursor",
+    "tokens"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kingluminance/cartotree.git"
   },
-  "keywords": ["cli", "ai", "context", "tree", "claude"],
-  "license": "MIT"
+  "dependencies": {
+    "commander": "^11.0.0",
+    "chalk": "^4.0.0",
+    "clipboardy": "^2.0.0"
+  }
 }
