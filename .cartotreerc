@@ -1,0 +1,7 @@
+{
+  "default": {
+    "ai": false,
+    "exports": true,
+    "depth": 3
+  }
+}

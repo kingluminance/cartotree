@@ -1,0 +1,15 @@
+{
+  "name": "cartotree",
+  "version": "0.1.0",
+  "description": "AI-friendly codebase tree with folder annotations",
+  "main": "src/tree.js",
+  "bin": {
+    "cartotree": "./bin/cartotree.js"
+  },
+  "scripts": {
+    "start": "node bin/cartotree.js",
+    "dev": "node bin/cartotree.js"
+  },
+  "keywords": ["cli", "ai", "context", "tree", "claude"],
+  "license": "MIT"
+}
