@@ -1,6 +1,3 @@
-### `README.md`
-
-
 # 🌲 cartotree
 
 > AI-friendly codebase mapping CLI — annotated directory trees that save tokens, not just space.
@@ -198,7 +195,6 @@ Supports `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`.
 ---
 
 ## License
-
 MIT
 
 ---
