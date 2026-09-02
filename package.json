@@ -1,6 +1,6 @@
 {
   "name": "cartotree",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI-friendly codebase mapping CLI — annotated directory trees that save tokens",
   "main": "src/tree.js",
   "bin": {
