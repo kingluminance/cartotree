@@ -199,14 +199,48 @@ MIT
 
 ---
 
-## Atlas (experimental): navigation commands for AI agents
+## For AI agents: locate · peek · links
+
+cartotree also works as a navigation layer for coding agents (Claude Code, Cursor, Codex…):
+it keeps a local index so the agent finds the right files **without dumping grep output or whole files** into context.
 
 ```bash
-npx cartotree locate "fix wsClient reconnect errors"   # which files to open first (no LLM)
-npx cartotree links packages/client/src/links/httpLink.ts   # imports, importers, co-changes, recent commits
-npx cartotree links httpBatchStreamLink                 # where a symbol is defined and called
+npx cartotree locate "abort JSONL stream on httpBatchStreamLink unsubscribe"   # which files to open first
+npx cartotree peek packages/client/src/links/httpBatchStreamLink.ts abort unsubscribe   # only the matching lines
+npx cartotree links httpBatchStreamLink        # where a symbol is defined and called
+npx cartotree links src/foo.ts                 # imports, importers, files usually changed with it (git)
 ```
 
-- `locate` ranks source files with BM25 over path words, exported names and identifiers. Output is a few file paths (~40 tokens) instead of large grep dumps.
-- `links` gives a compact connection map so an agent can follow a call chain without reading whole files. `usually changes with` comes from git history.
-- Early benchmark (2 repos, 27 real commit messages): the right file is in the top 3 for 11/12 (trpc) and 11/15 (deepseek-harness, 21k files).
+### Set it up so your agent uses it automatically
+
+```bash
+npx cartotree init            # skill + MCP server + SessionStart reminder (shows every change)
+npx cartotree init --dry-run  # preview only
+```
+
+Or as a Claude Code plugin:
+
+```bash
+claude plugin marketplace add kingluminance/cartotree
+claude plugin install cartotree@cartotree
+```
+
+The MCP server (`npx cartotree mcp`) exposes `cartotree_locate`, `cartotree_peek` and `cartotree_links`.
+After the first call the index stays in memory (~10 ms per lookup). An on-disk cache in `.cartotree/` is keyed by git HEAD and your uncommitted changes.
+
+### How locate ranks files
+
+BM25F over four fields of every source file: path words, exported names, code identifiers (scored per function so one matching function is not diluted by a long file) and **past commit messages that touched the file**. Plus light stemming, an import-neighbor boost, 1–2 evidence lines per result, a warning when the top results are close, and "usually changes with" from git co-change history. No LLM, no network.
+
+### Benchmark
+
+[deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) (21,632 files), 30 real commit messages → "which files were changed?", Claude Haiku agent, compared with the same agent using only ls/find/grep:
+
+| | grep only | cartotree (fast mode) |
+|---|---|---|
+| right file in top 3 | 13.5 / 15 | 14 / 15 |
+| tool-output tokens | ~37k | ~7.5k (**−80%**) |
+| total agent tokens | ~153k | ~100k (**−35%**) |
+| time | ~130 s | ~45 s (**−66%**) |
+
+Accuracy is on par with grep (±1 question across runs); the gain is cost and speed. Git history was cut off before the test commits to avoid leakage.

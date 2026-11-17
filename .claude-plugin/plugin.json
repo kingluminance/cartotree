@@ -1,0 +1,12 @@
+{
+  "name": "cartotree",
+  "version": "0.2.0",
+  "description": "Find the right files with few tokens: local index for locate / peek / links, as MCP tools + a skill.",
+  "author": { "name": "kingluminance" },
+  "repository": "https://github.com/kingluminance/cartotree",
+  "license": "MIT",
+  "keywords": ["navigation", "search", "tokens", "codebase", "mcp"],
+  "mcpServers": {
+    "cartotree": { "command": "npx", "args": ["-y", "cartotree@latest", "mcp"] }
+  }
+}

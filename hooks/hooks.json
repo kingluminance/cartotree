@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'cartotree is available: to find where code lives, call cartotree_locate first (then cartotree_peek to confirm) before grep or reading whole files.'"
+          }
+        ]
+      }
+    ]
+  }
+}

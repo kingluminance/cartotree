@@ -136,4 +136,27 @@ program
     console.log(out.join('\n'));
   });
 
+program
+  .command('mcp')
+  .description('run the cartotree MCP server over stdio (tools: cartotree_locate, cartotree_peek, cartotree_links)')
+  .action(async () => {
+    const { startMcpServer } = require('../src/atlas/mcp');
+    await startMcpServer(process.cwd());
+  });
+
+program
+  .command('init')
+  .description('set up this project so AI agents use cartotree automatically (skill + MCP server + reminder hook)')
+  .option('--agent <names>', 'comma-separated: claude-code, cursor, codex, windsurf (default: detect)')
+  .option('--no-hook', 'do not add the SessionStart reminder hook')
+  .option('--dry-run', 'show what would change, write nothing')
+  .action(o => {
+    const { runInit } = require('../src/atlas/init');
+    const agents = o.agent ? o.agent.split(',').map(s => s.trim()) : null;
+    const { agents: list, report } = runInit(process.cwd(), { agents, hook: o.hook, dryRun: !!o.dryRun });
+    console.log(`cartotree init${o.dryRun ? ' (dry run)' : ''} — agents: ${list.join(', ')}`);
+    report.forEach(l => console.log('  ' + l));
+    if (!o.dryRun) console.log('\nRestart your agent session to load the MCP server and skill.');
+  });
+
 program.parse(process.argv);

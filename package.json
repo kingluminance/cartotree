@@ -1,8 +1,11 @@
 {
   "name": "cartotree",
-  "version": "0.1.1",
-  "description": "AI-friendly codebase mapping CLI — annotated directory trees that save tokens",
+  "version": "0.2.0",
+  "description": "Find the right files with few tokens — annotated trees plus locate/peek/links for AI agents (CLI + MCP server + skill)",
   "main": "src/tree.js",
+  "scripts": {
+    "test": "node --test"
+  },
   "bin": {
     "cartotree": "bin/cartotree.js"
   },
@@ -13,16 +16,30 @@
     "tree",
     "claude",
     "cursor",
-    "tokens"
+    "tokens",
+    "mcp",
+    "claude-code",
+    "agents"
   ],
   "license": "MIT",
+  "files": [
+    "bin",
+    "src",
+    "skills",
+    "hooks",
+    ".claude-plugin",
+    "README.md",
+    "LICENSE"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kingluminance/cartotree.git"
   },
   "dependencies": {
-    "commander": "^11.0.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "chalk": "^4.0.0",
-    "clipboardy": "^2.0.0"
+    "clipboardy": "^2.0.0",
+    "commander": "^11.0.0",
+    "zod": "^4.6.7"
   }
 }

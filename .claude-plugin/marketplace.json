@@ -1,0 +1,11 @@
+{
+  "name": "cartotree",
+  "owner": { "name": "kingluminance" },
+  "plugins": [
+    {
+      "name": "cartotree",
+      "source": "./",
+      "description": "Find the right files with few tokens: locate / peek / links MCP tools + a navigation skill."
+    }
+  ]
+}
