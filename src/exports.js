@@ -2,6 +2,12 @@ const fs = require('fs');
 
 const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.mjs', '.cjs'];
 
+function stripComments(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
+}
+
 function parseExports(filePath) {
   const ext = SUPPORTED_EXTENSIONS.find(e => filePath.endsWith(e));
   if (!ext) return null;
@@ -13,10 +19,13 @@ function parseExports(filePath) {
     return null;
   }
 
+  // strip comments so examples like `// export { foo }` are not parsed
+  content = stripComments(content);
+
   const names = new Set();
 
   // export function foo / export async function foo / export class foo / export const foo
-  const namedPattern = /export\s+(?:async\s+)?(?:function|const|let|var|class)\s+(\w+)/g;
+  const namedPattern = /export\s+(?:async\s+)?(?:function\*?|const|let|var|class|abstract\s+class|type|interface|enum)\s+(\w+)/g;
   let match;
   while ((match = namedPattern.exec(content)) !== null) {
     if (match[1] !== 'default') names.add(match[1]);
@@ -62,4 +71,4 @@ function formatExports(names, max = 4) {
   return `<${visible.join(', ')}${rest}>`;
 }
 
-module.exports = { parseExports, formatExports };
+module.exports = { parseExports, formatExports, stripComments };

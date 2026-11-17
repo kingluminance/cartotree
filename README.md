@@ -198,3 +198,15 @@ Supports `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`.
 MIT
 
 ---
+
+## Atlas (experimental): navigation commands for AI agents
+
+```bash
+npx cartotree locate "fix wsClient reconnect errors"   # which files to open first (no LLM)
+npx cartotree links packages/client/src/links/httpLink.ts   # imports, importers, co-changes, recent commits
+npx cartotree links httpBatchStreamLink                 # where a symbol is defined and called
+```
+
+- `locate` ranks source files with BM25 over path words, exported names and identifiers. Output is a few file paths (~40 tokens) instead of large grep dumps.
+- `links` gives a compact connection map so an agent can follow a call chain without reading whole files. `usually changes with` comes from git history.
+- Early benchmark (2 repos, 27 real commit messages): the right file is in the top 3 for 11/12 (trpc) and 11/15 (deepseek-harness, 21k files).
