@@ -5,7 +5,7 @@ const { isGitRepo } = require('./files');
  * Read recent commit history once.
  * @returns {{commits: {hash:string, date:string, subject:string, files:string[]}[]}}
  */
-function readHistory(root, { limit = 3000, skip = 0, maxFilesPerCommit = 25 } = {}) {
+function readHistoryRaw(root, { limit = 3000, skip = parseInt(process.env.CARTOTREE_HISTORY_SKIP || '0'), maxFilesPerCommit = 25 } = {}) {
   if (!isGitRepo(root)) return { commits: [] };
   let raw;
   try {
@@ -24,6 +24,11 @@ function readHistory(root, { limit = 3000, skip = 0, maxFilesPerCommit = 25 } = 
     if (files.length && files.length <= maxFilesPerCommit) commits.push({ hash, date, subject: subj.join('\t'), files });
   }
   return { commits };
+}
+
+function readHistory(root, opts = {}) {
+  const { cached } = require('./cache');
+  return cached(root, 'history', opts, () => readHistoryRaw(root, opts));
 }
 
 /** How often each file changed (heat). */

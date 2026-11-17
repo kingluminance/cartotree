@@ -49,21 +49,38 @@ program
 
 program
   .command('locate <task...>')
-  .description('suggest which files to open first for a task (no LLM; BM25 + git history)')
-  .option('-k, --top <n>', 'number of results', '10')
-  .option('--history', 'boost frequently changed files (git history; mixed results in tests)')
+  .description('suggest which files to open first for a task (no LLM): BM25F over path/exports/code/past commit messages + import-graph boost')
+  .option('-k, --top <n>', 'number of results', '6')
+  .option('--no-history', 'ignore git commit history')
   .option('--tests', 'include test files')
   .option('--json', 'JSON output')
   .action((task, o) => {
     const { buildIndex, search } = require('../src/atlas/locate');
-    const { readHistory, heatMap } = require('../src/atlas/git');
+    const { readHistory } = require('../src/atlas/git');
     const root = process.cwd();
-    const index = buildIndex(root, { includeTests: !!o.tests });
-    const heat = o.history ? heatMap(readHistory(root)) : null;
-    const res = search(index, task.join(' '), { k: parseInt(o.top), heat });
-    if (o.json) return console.log(JSON.stringify(res, null, 2));
+    const { cached } = require('../src/atlas/cache');
+    const index = cached(root, 'locate', { tests: !!o.tests, history: o.history, v: 2 }, () =>
+      buildIndex(root, { includeTests: !!o.tests, graph: true, chunks: true, history: o.history ? readHistory(root) : null }));
+    const res = search(index, task.join(' '), { k: parseInt(o.top), chunkWeight: 0.5 });
+    if (o.history && res.length) {
+      // attach "usually changes with" for the top 2 results: helps find the second file of a change
+      const { coChanges } = require('../src/atlas/git');
+      const hist = readHistory(root);
+      const known = new Set(index.files);
+      for (const r of res.slice(0, 2)) {
+        const cc = coChanges(hist, r.file, 8);
+        if (cc.total >= 2) r.changesWith = cc.files.filter(c => known.has(c.file) && c.ratio >= 0.3).slice(0, 2);
+      }
+    }
+    if (o.json) return console.log(JSON.stringify({ ambiguous: !!res.ambiguous, results: res }, null, 2));
     if (!res.length) return console.log('no match — try other words (function names, folder names)');
-    console.log(res.map((r, i) => `${i + 1}. ${r.file}  [${r.matched.join(', ')}]`).join('\n'));
+    const lines = res.map((r, i) => {
+      const ev = (r.evidence || []).map(e => `\n     L${e.line}: ${e.code}`).join('')
+        + (r.changesWith && r.changesWith.length ? `\n     usually changes with: ${r.changesWith.map(c => `${c.file} (${Math.round(c.ratio * 100)}%)`).join(', ')}` : '');
+      return `${i + 1}. ${r.file}  (score ${r.score}; ${r.matched.join(', ')})${ev}`;
+    });
+    if (res.ambiguous) lines.unshift('! top results are close — verify before choosing');
+    console.log(lines.join('\n'));
   });
 
 program
@@ -74,9 +91,10 @@ program
     const fs = require('fs');
     const { buildGraph, symbolLinks, fileLinks } = require('../src/atlas/links');
     const root = process.cwd();
-    const graph = buildGraph(root);
+    const { cached } = require('../src/atlas/cache');
+    const graph = cached(root, 'graph', {}, () => buildGraph(root));
     const isFile = graph.set.has(target) || fs.existsSync(target);
-    const res = isFile ? fileLinks(graph, root, target) : symbolLinks(graph, target);
+    const res = isFile ? fileLinks(graph, root, target) : symbolLinks(graph, target, { root });
     if (o.json) return console.log(JSON.stringify(res, null, 2));
     const out = [];
     if (isFile) {
@@ -99,6 +117,22 @@ program
       res.usedIn.forEach(u => out.push(`  ${u.file} (${u.count}x)  ${u.first}`));
       if (res.moreFiles) out.push(`  ... +${res.moreFiles} more files`);
     }
+    console.log(out.join('\n'));
+  });
+
+program
+  .command('peek <file> <words...>')
+  .description('show only the lines of a file that contain the given words (compact grep for verifying a candidate)')
+  .option('-n, --max <n>', 'max lines', '10')
+  .option('--json', 'JSON output')
+  .action((file, words, o) => {
+    const { peek } = require('../src/atlas/peek');
+    const r = peek(process.cwd(), file, words, { max: parseInt(o.max) });
+    if (o.json) return console.log(JSON.stringify(r, null, 2));
+    if (r.error) return console.log(`${file}: ${r.error}`);
+    const out = [`# ${r.file} (${r.totalLines} lines, ${r.matchedLines} matching)`];
+    r.lines.forEach(l => out.push(`${l.line}: ${l.code}`));
+    if (r.matchedLines > r.lines.length) out.push(`... ${r.matchedLines - r.lines.length} more matching lines`);
     console.log(out.join('\n'));
   });
 

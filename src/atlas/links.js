@@ -9,13 +9,11 @@ const { readHistory, coChanges, recentChanges } = require('./git');
 function buildGraph(root) {
   const files = listSourceFiles(root, { includeTests: true });
   const set = new Set(files);
-  const texts = new Map();
   const imports = new Map();
   const importers = new Map();
   const exportsOf = new Map();
   for (const f of files) {
     const t = readSafe(root, f);
-    texts.set(f, t);
     exportsOf.set(f, parseExportsFromText(t));
     const im = parseImports(t, f, set);
     imports.set(f, im);
@@ -24,7 +22,7 @@ function buildGraph(root) {
       importers.get(g).push(f);
     }
   }
-  return { files, set, texts, imports, importers, exportsOf };
+  return { files, set, imports, importers, exportsOf };
 }
 
 function lineOf(text, idx) {
@@ -32,13 +30,22 @@ function lineOf(text, idx) {
 }
 
 /** Where a symbol is defined and where it is called (file:line + trimmed code). */
-function symbolLinks(graph, name, { maxUses = 12 } = {}) {
+function candidateFiles(root, graph, name) {
+  try {
+    const out = require('child_process').execSync(`git grep -l -w -- ${JSON.stringify(name)}`, { cwd: root, maxBuffer: 1 << 26, stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+    return out.split('\n').filter(f => graph.set.has(f));
+  } catch (e) {
+    return e.status === 1 ? [] : graph.files; // 1 = no match; otherwise not git -> scan all
+  }
+}
+
+function symbolLinks(graph, name, { maxUses = 12, root = process.cwd() } = {}) {
   const defs = [];
   const uses = [];
   const defRe = new RegExp(`(?:function\\*?|class|const|let|var|type|interface|enum)\\s+${name}\\b`);
   const useRe = new RegExp(`\\b${name}\\s*[(<.]`, 'g');
-  for (const f of graph.files) {
-    const t = graph.texts.get(f);
+  for (const f of candidateFiles(root, graph, name)) {
+    const t = readSafe(root, f);
     if (!t.includes(name)) continue;
     const d = defRe.exec(t);
     if (d) defs.push({ file: f, line: lineOf(t, d.index), exported: graph.exportsOf.get(f).includes(name) });
