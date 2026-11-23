@@ -1,26 +1,97 @@
 # 🌲 cartotree
 
-> AI-friendly codebase mapping CLI — annotated directory trees that save tokens, not just space.
+> Tell your coding agent which files to open first. Fewer grep calls, fewer tokens, same answers.
 
 [![npm version](https://img.shields.io/npm/v/cartotree)](https://www.npmjs.com/package/cartotree)
 [![license](https://img.shields.io/npm/l/cartotree)](./LICENSE)
 
+Ask an agent "why does this bug happen?" and it usually runs grep dozens of times and reads whole files before it finds where to look. cartotree keeps a local index of your repo and answers that first question directly: a ranked list of files with the matching lines as evidence. Works with Claude Code, Cursor, Codex and anything that speaks MCP.
+
+```bash
+npx cartotree init    # installs a skill + MCP server for your agent (shows every change, --dry-run to preview)
+```
+
 ---
 
-## The Problem
+## What the agent gets
+
+Three commands, each returning a few lines instead of a wall of grep output:
+
+```bash
+npx cartotree locate "abort JSONL stream on httpBatchStreamLink unsubscribe"   # which files to open first
+npx cartotree peek packages/client/src/links/httpBatchStreamLink.ts abort unsubscribe   # only the matching lines
+npx cartotree links httpBatchStreamLink        # where a symbol is defined and called
+npx cartotree links src/foo.ts                 # imports, importers, files usually changed with it (git)
+```
+
+## Setup
+
+```bash
+npx cartotree init            # skill + MCP server + SessionStart reminder (shows every change)
+npx cartotree init --dry-run  # preview only
+```
+
+Or as a Claude Code plugin:
+
+```bash
+claude plugin marketplace add kingluminance/cartotree
+claude plugin install cartotree@cartotree
+```
+
+The MCP server (`npx cartotree mcp`) exposes `cartotree_locate`, `cartotree_peek` and `cartotree_links`.
+After the first call the index stays in memory (~10 ms per lookup). An on-disk cache in `.cartotree/` is keyed by git HEAD and your uncommitted changes.
+
+## How locate ranks files
+
+BM25F over four fields of every source file: path words, exported names, code identifiers (scored per function so one matching function is not diluted by a long file) and **past commit messages that touched the file**. Plus light stemming, an import-neighbor boost, 1–2 evidence lines per result, a warning when the top results are close, and "usually changes with" from git co-change history. No LLM, no network.
+
+---
+
+## Benchmark
+
+[deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) (21,632 files). Questions are real commit messages ("which files were changed?"), answered by a Claude Haiku agent with cartotree vs. the same agent with only ls/find/grep. Each setup was run twice and averaged. Git history was cut off before the test commits so the tool cannot see the answers.
+
+**Fast mode, 15 questions** (default)
+
+| | grep only | cartotree |
+|---|---|---|
+| right file in top 3 | 13.5 / 15 | 14 / 15 |
+| right file ranked 1st | 12 / 15 | 11 / 15 |
+| tool-output tokens | ~37k | ~7.5k (**−80%**) |
+| total agent tokens | ~153k | ~100k (**−35%**) |
+| time | ~130 s | ~45 s (**−66%**) |
+
+**Careful mode, 30 questions** (agent verifies with `peek` before answering)
+
+| | grep only | cartotree |
+|---|---|---|
+| right file ranked 1st | 22 / 30 | 22.5 / 30 |
+| right file in top 3 | 25.5 / 30 | 24.5 / 30 |
+| tool-output tokens | baseline | **−63%** |
+| time | baseline | **−17%** |
+
+Accuracy is on par with grep (within ±1.5 questions); the gain is cost and speed. One thing we tried and reverted: telling the agent to "answer immediately when confident" made it list fewer candidates and lowered top-3 accuracy.
+
+---
+
+## Annotated directory trees
+
+The original cartotree command still works: a compact, annotated map of your codebase to paste into any AI chat.
+
+### The problem it started with
 
 When you paste your project structure into an AI assistant, two things happen:
 
 1. **Token waste** — Raw `tree` output burns hundreds of tokens on ASCII box characters with zero semantic value.
 2. **Hallucination** — AI has no idea what each folder *does*, so it guesses wrong.
 
-## The Solution
+### The Solution
 
 cartotree generates a compact, annotated map of your codebase — folder descriptions, exported functions, and an AI-optimized serialization format that fits your architecture into a fraction of the tokens.
 
 ---
 
-## Quick Start
+### Quick Start
 
 ```bash
 npx cartotree
@@ -30,7 +101,7 @@ No install required.
 
 ---
 
-## Output Formats
+### Output Formats
 
 ### Default — Annotated ASCII Tree
 ```
@@ -69,7 +140,7 @@ my-app{Core application source}[src{Core application source}[components{Reusable
 
 ---
 
-## Usage
+### Usage
 
 ```bash
 # Default annotated ASCII tree
@@ -105,7 +176,7 @@ npx cartotree --no-exports
 
 ---
 
-## Options
+### Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
@@ -120,7 +191,7 @@ npx cartotree --no-exports
 
 ---
 
-## Configuration
+### Configuration
 
 Create `.cartotreerc` in your project root to set persistent defaults:
 
@@ -138,7 +209,7 @@ Now `npx cartotree` automatically runs with `--ai --no-exports`.
 
 ---
 
-## Folder Annotations
+### Folder Annotations
 
 Add a `.folder.md` to any directory — the first line becomes the annotation:
 
@@ -151,7 +222,7 @@ cartotree also falls back to the first line of `README.md` if no `.folder.md` ex
 
 ---
 
-## Ignoring Files
+### Ignoring Files
 
 Create `.cartotreeignore` in your project root:
 
@@ -167,7 +238,7 @@ coverage
 
 ---
 
-## `--sync` Integration
+### `--sync` Integration
 
 Running `cartotree --sync` injects the tree between marker tags:
 
@@ -181,7 +252,7 @@ Works with `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, or any file.
 
 ---
 
-## Export Parsing
+### Export Parsing
 
 cartotree reads your source files and surfaces exported symbols directly in the tree:
 
@@ -195,52 +266,5 @@ Supports `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`.
 ---
 
 ## License
+
 MIT
-
----
-
-## For AI agents: locate · peek · links
-
-cartotree also works as a navigation layer for coding agents (Claude Code, Cursor, Codex…):
-it keeps a local index so the agent finds the right files **without dumping grep output or whole files** into context.
-
-```bash
-npx cartotree locate "abort JSONL stream on httpBatchStreamLink unsubscribe"   # which files to open first
-npx cartotree peek packages/client/src/links/httpBatchStreamLink.ts abort unsubscribe   # only the matching lines
-npx cartotree links httpBatchStreamLink        # where a symbol is defined and called
-npx cartotree links src/foo.ts                 # imports, importers, files usually changed with it (git)
-```
-
-### Set it up so your agent uses it automatically
-
-```bash
-npx cartotree init            # skill + MCP server + SessionStart reminder (shows every change)
-npx cartotree init --dry-run  # preview only
-```
-
-Or as a Claude Code plugin:
-
-```bash
-claude plugin marketplace add kingluminance/cartotree
-claude plugin install cartotree@cartotree
-```
-
-The MCP server (`npx cartotree mcp`) exposes `cartotree_locate`, `cartotree_peek` and `cartotree_links`.
-After the first call the index stays in memory (~10 ms per lookup). An on-disk cache in `.cartotree/` is keyed by git HEAD and your uncommitted changes.
-
-### How locate ranks files
-
-BM25F over four fields of every source file: path words, exported names, code identifiers (scored per function so one matching function is not diluted by a long file) and **past commit messages that touched the file**. Plus light stemming, an import-neighbor boost, 1–2 evidence lines per result, a warning when the top results are close, and "usually changes with" from git co-change history. No LLM, no network.
-
-### Benchmark
-
-[deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) (21,632 files), 30 real commit messages → "which files were changed?", Claude Haiku agent, compared with the same agent using only ls/find/grep:
-
-| | grep only | cartotree (fast mode) |
-|---|---|---|
-| right file in top 3 | 13.5 / 15 | 14 / 15 |
-| tool-output tokens | ~37k | ~7.5k (**−80%**) |
-| total agent tokens | ~153k | ~100k (**−35%**) |
-| time | ~130 s | ~45 s (**−66%**) |
-
-Accuracy is on par with grep (±1 question across runs); the gain is cost and speed. Git history was cut off before the test commits to avoid leakage.

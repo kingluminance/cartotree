@@ -1,6 +1,6 @@
 {
   "name": "cartotree",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Find the right files with few tokens — annotated trees plus locate/peek/links for AI agents (CLI + MCP server + skill)",
   "main": "src/tree.js",
   "scripts": {
