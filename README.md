@@ -7,6 +7,8 @@
 
 Ask an agent "why does this bug happen?" and it usually runs grep dozens of times and reads whole files before it finds where to look. cartotree keeps a local index of your repo and answers that first question directly: a ranked list of files with the matching lines as evidence. Works with Claude Code, Cursor, Codex and anything that speaks MCP.
 
+![cartotree locate demo](https://raw.githubusercontent.com/kingluminance/cartotree/main/docs/demo.svg)
+
 ```bash
 npx cartotree init    # installs a skill + MCP server for your agent (shows every change, --dry-run to preview)
 ```

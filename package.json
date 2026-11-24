@@ -1,6 +1,6 @@
 {
   "name": "cartotree",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Find the right files with few tokens — annotated trees plus locate/peek/links for AI agents (CLI + MCP server + skill)",
   "main": "src/tree.js",
   "scripts": {
@@ -19,7 +19,14 @@
     "tokens",
     "mcp",
     "claude-code",
-    "agents"
+    "agents",
+    "mcp-server",
+    "model-context-protocol",
+    "ai-agent",
+    "codebase-search",
+    "code-search",
+    "claude-code-plugin",
+    "developer-productivity"
   ],
   "license": "MIT",
   "files": [
@@ -41,5 +48,9 @@
     "clipboardy": "^2.0.0",
     "commander": "^11.0.0",
     "zod": "^4.6.7"
+  },
+  "homepage": "https://github.com/kingluminance/cartotree#readme",
+  "bugs": {
+    "url": "https://github.com/kingluminance/cartotree/issues"
   }
 }

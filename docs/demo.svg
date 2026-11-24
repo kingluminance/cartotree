@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="351" viewBox="0 0 980 351">
+<rect width="980" height="351" rx="10" fill="#0d1117"/>
+<circle cx="20" cy="18" r="6" fill="#ff5f56"/><circle cx="40" cy="18" r="6" fill="#ffbd2e"/><circle cx="60" cy="18" r="6" fill="#27c93f"/>
+<text x="490.0" y="22" fill="#8b949e" font-family="monospace" font-size="12" text-anchor="middle">cartotree locate</text>
+<text x="16" y="46" fill="#7ee787" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">$ npx cartotree locate &quot;abort stream when httpBatchStreamLink unsubscribes&quot;</text>
+<text x="16" y="65" fill="#e3b341" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">! top results are close — verify before choosing</text>
+<text x="16" y="84" fill="#79c0ff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">1. packages/client/src/links/httpBatchStreamLink.ts  (score 31.12; stream, abort, batch, link)</text>
+<text x="16" y="103" fill="#8b949e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">     L22: * Options for {@link httpBatchStreamLink}. Takes the same options as</text>
+<text x="16" y="122" fill="#8b949e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">     L23: * `httpBatchLink`, plus `streamHeader`.</text>
+<text x="16" y="141" fill="#d2a8ff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">     usually changes with: packages/client/src/links/httpSubscriptionLink.ts (33%), packages/client/src/links/internal</text>
+<text x="16" y="160" fill="#79c0ff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">2. packages/client/src/internals/types.ts  (score 28.95; abort, stream, batch, link)</text>
+<text x="16" y="179" fill="#8b949e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">     L101: * @see https://trpc.io/docs/client/links#managing-context</text>
+<text x="16" y="198" fill="#8b949e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">     L105: * Aborts the call. With `httpBatchLink`, the request is only aborted once</text>
+<text x="16" y="217" fill="#d2a8ff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">     usually changes with: packages/client/src/links/internals/httpUtils.ts (30%)</text>
+<text x="16" y="236" fill="#79c0ff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">3. packages/server/src/unstable-core-do-not-import/http/resolveResponse.ts  (score 28.88; abort, stream, batch, http)</text>
+<text x="16" y="255" fill="#8b949e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">     L487: &#x27;Cannot use stream-like response in non-streaming request - use httpBatchStreamLink&#x27;,</text>
+<text x="16" y="274" fill="#8b949e" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve">     L656: // httpBatchStreamLink</text>
+<text x="16" y="293" fill="#c9d1d9" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve"></text>
+<text x="16" y="312" fill="#6e7681" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" xml:space="preserve"># trpc repo · 1 call · ~300 tokens instead of a dozen grep/read calls</text>
+</svg>
